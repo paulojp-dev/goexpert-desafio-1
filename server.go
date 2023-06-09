@@ -64,7 +64,7 @@ func persistQuotation(quotation float64) error {
 		return error
 	}
 	defer db.Close()
-	stmt, error := db.Prepare("insert into cotations values(NULL, 'USD', $1, $2)")
+	stmt, error := db.Prepare("insert into quotations values(NULL, 'USD', $1, $2)")
 	if error != nil {
 		return error
 	}
@@ -84,7 +84,7 @@ func prepareDB() (*sql.DB, error) {
 		return nil, error
 	}
 	createTable := `
-		CREATE TABLE IF NOT EXISTS cotations (
+		CREATE TABLE IF NOT EXISTS quotations (
 			id INTEGER NOT NULL PRIMARY KEY,
 			currency TEXT NOT NULL,
 			value REAL NOT NULL,
