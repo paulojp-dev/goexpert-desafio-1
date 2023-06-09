@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/tidwall/gjson"
 )
@@ -11,6 +13,8 @@ import (
 func main() {
 	http.HandleFunc("/cotacao", GetDolarCotationHandler)
 	http.ListenAndServe(":8080", nil)
+
+	// TODO: 10ms máximo para salvar no banco de dados SQLite
 }
 
 func GetDolarCotationHandler(response http.ResponseWriter, request *http.Request) {
@@ -28,7 +32,13 @@ func GetDolarCotationHandler(response http.ResponseWriter, request *http.Request
 }
 
 func GetDolarCotation() (float64, error) {
-	response, error := http.Get("https://economia.awesomeapi.com.br/json/last/USD-BRL")
+	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+	defer cancel()
+	request, error := http.NewRequestWithContext(ctx, "GET", "https://economia.awesomeapi.com.br/json/last/USD-BRL", nil)
+	if error != nil {
+		return 0, error
+	}
+	response, error := http.DefaultClient.Do(request)
 	if error != nil {
 		return 0, error
 	}
