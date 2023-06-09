@@ -2,11 +2,17 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"time"
 )
+
+type Result struct {
+	Value float64 `json:"value"`
+}
 
 func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Millisecond)
@@ -19,6 +25,24 @@ func main() {
 	if error != nil {
 		panic(error)
 	}
+	responseBody, error := io.ReadAll(response.Body)
+	if error != nil {
+		panic(error)
+	}
 	defer response.Body.Close()
-	io.Copy(os.Stdout, response.Body)
+	var result Result
+	error = json.Unmarshal(responseBody, &result)
+	if error != nil {
+		panic(error)
+	}
+	saveResultOnFile(result)
+}
+
+func saveResultOnFile(result Result) {
+	file, error := os.Create("cotacao.txt")
+	if error != nil {
+		panic(error)
+	}
+	defer file.Close()
+	file.WriteString(fmt.Sprintf("Dólar:%f", result.Value))
 }
